@@ -17,6 +17,9 @@ option(LIBZIPPP_BUILD_TESTS "Build unit tests" ${is_root_project})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(LIBZIP MODULE REQUIRED)
+if(UNIX AND NOT APPLE)
+ find_package(OpenSSL MODULE REQUIRED)
+endif()
 
 add_library(libzippp "src/libzippp.cpp")
 add_library(libzippp::libzippp ALIAS libzippp) # Convenience alias
@@ -26,7 +29,11 @@ target_include_directories(libzippp
     $<INSTALL_INTERFACE:include/libzippp>
 )
 set_target_properties(libzippp PROPERTIES PREFIX "") # Avoid duplicate "lib" prefix
-target_link_libraries(libzippp PRIVATE libzip::libzip)
+if(UNIX AND NOT APPLE)
+  target_link_libraries(libzippp PRIVATE libzip::libzip OpenSSL::SSL OpenSSL::Crypto)
+else()
+  target_link_libraries(libzippp PRIVATE libzip::libzip Crypt32.lib)
+endif()
 if (BUILD_SHARED_LIBS)
   target_compile_definitions(libzippp PRIVATE LIBZIPPP_EXPORTS)
 else()

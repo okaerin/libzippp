@@ -128,6 +128,14 @@ namespace libzippp {
             CURRENT
         };
         
+        enum Encryption{
+            NONE,// No encryption.
+            AES_128,// Winzip AES-128 encryption.
+            AES_192,// Winzip AES-192 encryption.
+            AES_256,// Winzip AES-256 encryption.
+            TRAD_PKWARE// Traditional PKWare encryption. Do not use this method, it is not secure. It is only provided for backwards compatibility.
+        };
+        
         /**
          * Creates a new ZipArchive with the given path. If the password is defined, it
          * will be used to read encrypted archive. It won't affect the files added
@@ -135,7 +143,7 @@ namespace libzippp {
          * 
          * http://nih.at/listarchive/libzip-discuss/msg00219.html
          */
-        explicit ZipArchive(const std::string& zipPath, const std::string& password="");
+        explicit ZipArchive(const std::string& zipPath, const std::string& password="", Encryption encryptionMethod = Encryption::NONE);
         virtual ~ZipArchive(void); //commit all the changes if open
         
         /**
@@ -393,6 +401,7 @@ namespace libzippp {
         zip_source* zipSource;
         OpenMode mode;
         std::string password;
+        int encryptionMethod;
         
         //open from a buffer
         bool openBuffer(const char* buffer, libzippp_uint32 sz, OpenMode mode=READ_ONLY, bool checkConsistency=false);

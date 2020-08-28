@@ -78,7 +78,25 @@ int ZipEntry::readContent(std::ostream& ofOutput, ZipArchive::State state, libzi
    return zipFile->readEntry(*this, ofOutput, state, chunksize);
 }
 
-ZipArchive::ZipArchive(const string& zipPath, const string& password) : path(zipPath), zipHandle(NULL), zipSource(NULL), mode(NOT_OPEN), password(password) {
+ZipArchive::ZipArchive(const string& zipPath, const string& password, Encryption encryptionMethod) : path(zipPath), zipHandle(NULL), zipSource(NULL), mode(NOT_OPEN), password(password){
+    switch(encryptionMethod){
+        case Encryption::AES_128:
+            this->encryptionMethod=ZIP_EM_AES_128;
+            break;
+        case Encryption::AES_192:
+            this->encryptionMethod=ZIP_EM_AES_192;
+            break;
+        case Encryption::AES_256:
+            this->encryptionMethod=ZIP_EM_AES_256;
+            break;
+        case Encryption::TRAD_PKWARE:
+            this->encryptionMethod=ZIP_EM_TRAD_PKWARE;
+            break;
+        case Encryption::NONE:
+        default:
+            this->encryptionMethod=ZIP_EM_NONE;
+            break;
+    }
 }
 
 ZipArchive::~ZipArchive(void) { 
@@ -530,8 +548,17 @@ bool ZipArchive::addFile(const string& entryName, const string& file) const {
     zip_source* source = zip_source_file(zipHandle, filepath, 0, end);
     if (source!=NULL) {
         libzippp_int64 result = zip_file_add(zipHandle, entryName.c_str(), source, ZIP_FL_OVERWRITE);
-        if (result>=0) { return true; } 
-        else { zip_source_free(source); } //unable to add the file
+        if (result>=0) { 
+            if(isEncrypted()){
+                if(zip_file_set_encryption(zipHandle,result,encryptionMethod,nullptr)!=0){//unable to encrypt
+                    zip_source_free(source);
+                }else{
+                    return true;
+                }
+            }else{
+                return true;
+                }
+        } else { zip_source_free(source); } //unable to add the file
     } else {
         //unable to create the zip_source
     }
@@ -553,8 +580,17 @@ bool ZipArchive::addData(const string& entryName, const void* data, libzippp_uin
     zip_source* source = zip_source_buffer(zipHandle, data, length, freeData);
     if (source!=NULL) {
         libzippp_int64 result = zip_file_add(zipHandle, entryName.c_str(), source, ZIP_FL_OVERWRITE);
-        if (result>=0) { return true; } 
-        else { zip_source_free(source); } //unable to add the file
+        if (result>=0) { 
+            if(isEncrypted()){
+                if(zip_file_set_encryption(zipHandle,result,encryptionMethod,nullptr)!=0){//unable to encrypt
+                    zip_source_free(source);
+                }else{
+                    return true;
+                }
+            }else{
+                return true;
+                }
+        } else { zip_source_free(source); } //unable to add the file
     } else {
         //unable to create the zip_source
     }
