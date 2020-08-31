@@ -19,6 +19,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(LIBZIP MODULE REQUIRED)
 if(UNIX AND NOT APPLE)
  find_package(OpenSSL MODULE REQUIRED)
+elseif(APPLE)
+ find_package(openssl MODULE REQUIRED)
 endif()
 
 add_library(libzippp "src/libzippp.cpp")
@@ -29,7 +31,7 @@ target_include_directories(libzippp
     $<INSTALL_INTERFACE:include/libzippp>
 )
 set_target_properties(libzippp PROPERTIES PREFIX "") # Avoid duplicate "lib" prefix
-if(UNIX AND NOT APPLE)
+if(UNIX OR APPLE)
   target_link_libraries(libzippp PRIVATE libzip::libzip OpenSSL::SSL OpenSSL::Crypto)
 else()
   target_link_libraries(libzippp PRIVATE libzip::libzip Crypt32.lib)
