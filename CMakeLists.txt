@@ -17,10 +17,8 @@ option(LIBZIPPP_BUILD_TESTS "Build unit tests" ${is_root_project})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(LIBZIP MODULE REQUIRED)
-if(UNIX AND NOT APPLE)
+if(UNIX OR APPLE)
  find_package(OpenSSL MODULE REQUIRED)
-elseif(APPLE)
- find_package(openssl MODULE REQUIRED)
 endif()
 
 add_library(libzippp "src/libzippp.cpp")
